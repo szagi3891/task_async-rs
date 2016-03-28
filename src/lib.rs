@@ -71,7 +71,7 @@ licznik instancji, będzie liczył ilość tasków
 gdy watroś spadnie do zera, to znaczy że ma się wykonać callback kończący
 */
     
-    
+ 
     
 /*
 pub fn get<F>(id: i32, job: F) where F: Fn(i32) + Send + 'static + Sync {
