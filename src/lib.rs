@@ -1,3 +1,6 @@
+#![feature(fnbox)]
+
+
 extern crate channels_async;
 
 mod counter;

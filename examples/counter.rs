@@ -1,7 +1,10 @@
+#![feature(fnbox)]
+
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 use std::sync::Arc;
+use std::boxed::FnBox;
 
 extern crate task_async;
 extern crate channels_async;
@@ -18,7 +21,7 @@ fn run_timeout(inst: Arc<Counter>, name: String, timeout: u64) {
         
         sleep(Duration::from_millis(timeout));
         
-        println!("kończę {}", name);
+        println!("end task -> {}", name);
     });
 }
 
@@ -29,9 +32,17 @@ fn main() {
     let (down_producer, donw_consumer) = channel();
 
     {
+        let varible = "some value".to_owned();
+        
+        let end_fun : Box<FnBox() + Send + Sync> = Box::new(move||{
+            
+            println!("cleanig state -> {}", varible);
+        });
+        
         let inst = Counter::new(Box::new(move||{
 
             println!("counter is 0");
+            (end_fun as Box<FnBox()>)();
             down_producer.send(()).unwrap();
         }));
 
@@ -43,6 +54,6 @@ fn main() {
 
     let _ = donw_consumer.get();
 
-    println!("kończę program");
+    println!("end program");
 }
 
