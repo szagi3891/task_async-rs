@@ -1,0 +1,11 @@
+[package]
+name = "task_async"
+version = "0.1.0"
+authors = ["szagi3891 <szeligagrzegorz@gmail.com>"]
+
+
+[dependencies.channels_async]
+git = "https://github.com/szagi3891/channels_async-rs"
+
+
+[dependencies]
