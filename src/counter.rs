@@ -3,7 +3,7 @@ use std::mem;
 
 
 pub struct Counter {
-    func : Option<Box<Fn() + Send + Sync + 'static>>,
+    func : Box<Fn() + Send + Sync + 'static>,
 }
 
 impl Counter {
@@ -11,7 +11,7 @@ impl Counter {
     pub fn new(func: Box<Fn() + Send + Sync + 'static>) -> Arc<Counter> {
 
         Arc::new(Counter {
-            func : Some(func)
+            func : func
         })
     }
 }
@@ -20,7 +20,15 @@ impl Drop for Counter {
     
     fn drop(&mut self) {
         
-        let func = mem::replace(&mut self.func, None);
-        func.unwrap()();
+        let empty_clouser = Box::new(||{});
+        let func = mem::replace(&mut self.func, empty_clouser);
+        func();
     }
 }
+
+
+/*
+use std::boxed::FnBox;
+Box<FnBox(T) + Send + Sync + 'static>;
+*/
+
