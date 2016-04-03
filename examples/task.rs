@@ -60,6 +60,10 @@ fn main() {
             sleep(Duration::from_millis(2000));
             println!("wykonało się pierwsze asynchroniczne zapytanie");
             
+            //let resp = "odpowiedź pierwsza".to_owned());
+            
+            //set_resp1.call(resp);
+            
             (set_resp1 as Box<FnBox(String)>)("odpowiedź pierwsza".to_owned());
         });
         
