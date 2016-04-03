@@ -7,7 +7,7 @@ mod counter;
 mod task;
 
 pub use counter::Counter;
-pub use task::{TaskManager, Callback1, Callback2};
+pub use task::{TaskManager, Task, Callback1, Callback2};
 
 
 
@@ -20,60 +20,8 @@ mod tests {
 }
 
 
+//TODO - zaimplementować drop dla taska, ma wykonać wtedy callbacka z wartością none ...
 
-//TODO ...
-
-/*
-    taskManager = create(||{
-
-        //gdy licznik spadnie do zera, to wykonywany jest callback
-        //samozjadanie down, usunięcie markera
-
-        //w tym momencie można zrobić group.off();          //wyłączenie wszystkich pracujących wątków
-
-        //sygnał dla świata na zewnątrz przez kanał, że grupa wątków dokonała swego żywota
-    });
-
-
-    //jakieś operacje asynchroniczne używające taskManager-a ...
-
-*/
-
-
-/*
-
-
-let mut taskManager = createTaskManager();
-
-
-let (set_res1, set_res2) = taskManager.create(move|resp1, resp2|{
-
-    //gdy odpowiedź z obu odpowiedzi, to wtedy wykonaj tego callbacka ...
-});
-
-let (set_res1, set_res2, set_res3) = taskManager.create3(move|resp1, resp2, resp3|{
-    //...
-});
-
-
-taskManager.create(move|set_resp|{
-
-    asynchroniczne zapytanie
-
-}, move|set_resp|{
-
-    asynchroniczne zapytanie
-
-}, move|response1, response2|{
-
-    zagregowanie obu odpowiedzi i zwrot na poziom wyżej
-});
-
-
-licznik instancji, będzie liczył ilość tasków
-gdy watroś spadnie do zera, to znaczy że ma się wykonać callback kończący
-*/
-    
  
     
 /*

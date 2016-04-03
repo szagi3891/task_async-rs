@@ -3,11 +3,11 @@ use std::boxed::FnBox;
 use std::sync::{Arc, RwLock};
 use std::mem;
 
-pub type Callback0      = Box<FnBox()    + Send + Sync + 'static>;
-pub type Callback1<A>   = Box<FnBox(A)   + Send + Sync + 'static>;
-pub type Callback2<A,B> = Box<FnBox(A,B) + Send + Sync + 'static>;
 
-
+pub type Callback0        = Box<FnBox()      + Send + Sync + 'static>;
+pub type Callback1<A>     = Box<FnBox(A)     + Send + Sync + 'static>;
+pub type Callback2<A,B>   = Box<FnBox(A,B)   + Send + Sync + 'static>;
+pub type Callback3<A,B,C> = Box<FnBox(A,B,C) + Send + Sync + 'static>;
 
 
 struct Result2<A,B>
@@ -40,31 +40,49 @@ impl<A,B> Drop for Result2<A,B>
 
 
 
-pub struct Task<A> where A : Send + Sync + 'static {
+pub struct Task<A>
+    where A : Send + Sync + 'static {
     
     counter : Arc<Counter>,
-    func    : Callback1<A>,
+    func    : Callback1<Option<A>>,
 }
+
 
 impl<A> Task<A> where A : Send + Sync + 'static {
     
     pub fn result(mut self, value: A) {
         
-        let empty_clouser = Box::new(|_:A|{});
+        let empty_clouser = Box::new(|_:Option<A>|{});
         let complete      = mem::replace(&mut self.func, empty_clouser);
         
-        (complete as Box<FnBox(A)>)(value);
+        (complete as Box<FnBox(Option<A>)>)(Some(value));
     }
     
     
-    pub fn async<B, C>(&self, complete: Callback2<Option<B>, Option<C>>) -> (Task<B>, Task<C>)
+    pub fn async<B, C>(self, complete: Callback3<Task<A>, Option<B>, Option<C>>) -> (Task<B>, Task<C>)
+    
     where
         B : Send + Sync + 'static ,
         C : Send + Sync + 'static {
         
+        
+        let counter1 = self.counter.clone();
+        let counter2 = self.counter.clone();
+        let counter3 = self.counter.clone();
+        
+                                                        //TODO - upewnić się że licznik zbiorczego zadania prawidłowo się przenosi
+        
+        let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
+            
+            (complete as Box<FnBox(Task<A>, Option<B>, Option<C>)>)(self, result1, result2);
+            
+            //(complete as Box<FnBox(Task<A>)>)(self);
+        });
+        
+        
         let result = Arc::new(RwLock::new(Result2{
-            _counter : self.counter.clone(),
-            complete : complete,
+            _counter : counter1,
+            complete : new_complete,
             result1  : None,
             result2  : None,
         }));
@@ -73,24 +91,24 @@ impl<A> Task<A> where A : Send + Sync + 'static {
 
         let set1 = Task{
             
-            counter : self.counter.clone(),
+            counter : counter2,
             
-            func : Box::new(move |data: B| {
+            func : Box::new(move |data: Option<B>| {
                                                                         //TODO - dobrze byłoby się pozbyć tego unwrapa
-                result_copy.write().unwrap().result1 = Some(data);
+                result_copy.write().unwrap().result1 = data;
             })
         };
         
         let set2 = Task{
             
-            counter : self.counter.clone(),
+            counter : counter3,
             
-            func : Box::new(move |data: C| {
+            func : Box::new(move |data: Option<C>| {
                                                                         //TODO - dobrze byłoby się pozbyć tego unwrapa
-                result.write().unwrap().result2 = Some(data);
+                result.write().unwrap().result2 = data;
             })
         };
-            
+        
         (set1, set2)
     }
 }
@@ -111,7 +129,7 @@ impl TaskManager {
     }
     
     
-    pub fn task<A>(&self, func: Callback1<A>) -> Task<A>
+    pub fn task<A>(&self, func: Callback1<Option<A>>) -> Task<A>
         where A : Send + Sync + 'static {
         
         Task {
@@ -150,7 +168,7 @@ impl TaskManager {
         (set1, set2)
     }
     
-    
+    /*
     //TODO - całkowity zakaz klonowania TaskManagera
     pub fn clone(&self) -> TaskManager {
         
@@ -158,4 +176,5 @@ impl TaskManager {
             counter : self.counter.clone()
         }
     }
+    */
 }

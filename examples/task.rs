@@ -9,7 +9,7 @@ extern crate task_async;
 extern crate channels_async;
 
 use channels_async::channel;
-use task_async::TaskManager;
+use task_async::{TaskManager, Task};
 
 
 fn main() {
@@ -36,41 +36,61 @@ fn main() {
         }));
         
         
-        let (set_resp1, set_resp2) = task_manager.async_run(Box::new(move|response1, response2|{
+        
+        let main_task = task_manager.task(Box::new(move|result : Option<String>|{
+            
+            match result {
+                Some(value) => println!("{}", value),
+                None => println!("dane niekompletne"),
+            };
+        }));
+        
+        
+        
+        let (set_resp1, set_resp2) = main_task.async(Box::new(move|main_task: Task<String>, response1: Option<String>, response2: Option<String>|{
             
                                             //zagregowanie obu odpowiedzi
             match (response1, response2) {
                 
                 (Some(dat1), Some(dat2)) => {
-            
-                    println!("zbiorczy callback '{}', '{}'", dat1, dat2);
+                    
+                    let mess: String = format!("zbiorczy callback '{}', '{}'", dat1, dat2);
+                    
+                    main_task.result(mess);
                 },
                 
                 _ => {
                     
-                    println!("dane niekompletne");
+                    main_task.result("dane niekompletne".to_owned());
                 }
             }
-        
+            
         }));
         
                             //asynchroniczne zapytanie
         thread::spawn(move||{
-
+            
             sleep(Duration::from_millis(2000));
             println!("wykonało się pierwsze asynchroniczne zapytanie");
             
-            //let resp = "odpowiedź pierwsza".to_owned());
-            
-            //set_resp1.call(resp);
-            
-            (set_resp1 as Box<FnBox(String)>)("odpowiedź pierwsza".to_owned());
+            set_resp1.result("odpowiedź pierwsza".to_owned());
         });
         
         
         
-        let task_manager = task_manager.clone();
         
+                                    //TODO - testowo
+        thread::spawn(move||{
+            
+            sleep(Duration::from_millis(3000));
+            println!("wykonało się drugie asynchroniczne zapytanie");
+            
+            set_resp2.result("odpowiedź druga".to_owned());
+        });
+        
+        
+        
+        /*
         let (set_resp3, set_resp4) = task_manager.async_run(Box::new(move|response1, response2|{
             
             match (response1, response2) {
@@ -105,7 +125,8 @@ fn main() {
             println!("wykonało się czwarte asynchroniczne zapytanie");
             
             (set_resp4 as Box<FnBox(String)>)("odpowiedź czwarta".to_owned());
-        }); 
+        });
+        */
     }
     
     
