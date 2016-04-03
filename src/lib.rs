@@ -21,7 +21,7 @@ mod tests {
 
 
 //TODO - zaimplementować drop dla taska, ma wykonać wtedy callbacka z wartością none ...
-
+        //też trzeba sprawdzić czy działa wysyłanie None
  
     
 /*

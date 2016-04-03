@@ -47,8 +47,27 @@ pub struct Task<A>
     func    : Callback1<Option<A>>,
 }
 
+/*
+impl<A,B> Drop for Result2<A,B>
+    where
+        A : Send + Sync + 'static,
+        B : Send + Sync + 'static {
+
+    fn drop(&mut self) {
+        
+    }
+}
+*/
 
 impl<A> Task<A> where A : Send + Sync + 'static {
+    
+    fn new(counter: Arc<Counter>, func: Callback1<Option<A>>) -> Task<A> {
+        
+        Task {
+            counter : counter,
+            func    : func
+        }
+    }
     
     pub fn result(mut self, value: A) {
         
@@ -75,8 +94,6 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
             
             (complete as Box<FnBox(Task<A>, Option<B>, Option<C>)>)(self, result1, result2);
-            
-            //(complete as Box<FnBox(Task<A>)>)(self);
         });
         
         
@@ -88,28 +105,19 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         }));
         
         let result_copy = result.clone();
-
-        let set1 = Task{
-            
-            counter : counter2,
-            
-            func : Box::new(move |data: Option<B>| {
-                                                                        //TODO - dobrze byłoby się pozbyć tego unwrapa
-                result_copy.write().unwrap().result1 = data;
-            })
-        };
         
-        let set2 = Task{
             
-            counter : counter3,
-            
-            func : Box::new(move |data: Option<C>| {
-                                                                        //TODO - dobrze byłoby się pozbyć tego unwrapa
-                result.write().unwrap().result2 = data;
-            })
-        };
+        let func2 = Box::new(move |data: Option<B>| {
+                                                                    //TODO - dobrze byłoby się pozbyć tego unwrapa
+            result_copy.write().unwrap().result1 = data;
+        });
         
-        (set1, set2)
+        let func3 = Box::new(move |data: Option<C>| {
+                                                                    //TODO - dobrze byłoby się pozbyć tego unwrapa
+            result.write().unwrap().result2 = data;
+        });
+        
+        (Task::new(counter2, func2), Task::new(counter3, func3))
     }
 }
 
@@ -132,49 +140,6 @@ impl TaskManager {
     pub fn task<A>(&self, func: Callback1<Option<A>>) -> Task<A>
         where A : Send + Sync + 'static {
         
-        Task {
-            counter : self.counter.clone(),
-            func : func
-        }
-    }
-    
-    
-    //TODO - wylatuje z tego miejsca ta funkcjonalność
-    
-    pub fn async_run<A,B>(&self, complete: Callback2<Option<A>, Option<B>>) -> (Callback1<A>, Callback1<B>)
-    where
-        A : Send + Sync + 'static ,
-        B : Send + Sync + 'static {
-        
-        let result = Arc::new(RwLock::new(Result2{
-            _counter : self.counter.clone(),
-            complete : complete,
-            result1  : None,
-            result2  : None,
-        }));
-        
-        let result_copy = result.clone();
-
-        let set1 = Box::new(move |data: A| {
-                                                                        //TODO - dobrze byłoby się pozbyć tego unwrapa
-            result_copy.write().unwrap().result1 = Some(data);
-        });
-        
-        let set2 = Box::new(move |data: B| {
-                                                                        //TODO - dobrze byłoby się pozbyć tego unwrapa
-            result.write().unwrap().result2 = Some(data);
-        });
-            
-        (set1, set2)
-    }
-    
-    /*
-    //TODO - całkowity zakaz klonowania TaskManagera
-    pub fn clone(&self) -> TaskManager {
-        
-        TaskManager {
-            counter : self.counter.clone()
-        }
-    }
-    */
+        Task::new(self.counter.clone(), func)
+    }   
 }
