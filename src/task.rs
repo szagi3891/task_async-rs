@@ -6,12 +6,13 @@ use result2::Result2;
 use types::{Callback1, callback1_exec, Callback3, callback3_exec};
 
 
+
+
 pub struct Task<A>
     where A : Send + Sync + 'static {
     
     counter : Arc<Counter>,
-    func    : Callback1<Option<A>>,
-    is_exec : bool,
+    func    : Option<Callback1<Option<A>>>,
 }
 
 
@@ -21,12 +22,13 @@ impl<A> Drop for Task<A>
 
     fn drop(&mut self) {
         
-        if self.is_exec == false {
+        match mem::replace(&mut self.func, None) {
 
-            let empty_clouser = Box::new(|_:Option<A>|{});
-            let complete      = mem::replace(&mut self.func, empty_clouser);
+            Some(complete) => callback1_exec(complete, None),
 
-            callback1_exec(complete, None);
+            None => {
+                //nic nie robimy, prawidłowy przebieg
+            }
         }
     }
 }
@@ -38,19 +40,18 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         Task {
             counter : counter,
-            func    : func,
-            is_exec : false,
+            func    : Some(func),
         }
     }
     
     pub fn result(mut self, value: A) {
         
-        let empty_clouser = Box::new(|_:Option<A>|{});
-        let complete      = mem::replace(&mut self.func, empty_clouser);
         
-        self.is_exec = true;
-        
-        callback1_exec(complete, Some(value));
+        match mem::replace(&mut self.func, None) {
+            
+            Some(complete) => callback1_exec(complete, Some(value)),
+            None => unreachable!(),
+        }
     }
     
     
@@ -63,7 +64,6 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         let counter1 = self.counter.clone();
         let counter2 = self.counter.clone();
-        let counter3 = self.counter.clone();
         
                                                         //TODO - upewnić się że licznik zbiorczego zadania prawidłowo się przenosi
         
@@ -74,7 +74,6 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         
         let result = Arc::new(RwLock::new(Result2{
-            _counter : counter1,
             complete : new_complete,
             result1  : None,
             result2  : None,
@@ -83,17 +82,17 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         let result_copy = result.clone();
         
             
-        let func2 = Box::new(move |data: Option<B>| {
+        let func1 = Box::new(move |data: Option<B>| {
                                                                     //TODO - dobrze byłoby się pozbyć tego unwrapa
             result_copy.write().unwrap().result1 = data;
         });
         
-        let func3 = Box::new(move |data: Option<C>| {
+        let func2 = Box::new(move |data: Option<C>| {
                                                                     //TODO - dobrze byłoby się pozbyć tego unwrapa
             result.write().unwrap().result2 = data;
         });
         
-        (Task::new(counter2, func2), Task::new(counter3, func3))
+        (Task::new(counter1, func1), Task::new(counter2, func2))
     }
 }
 

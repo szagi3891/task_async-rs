@@ -1,7 +1,5 @@
-use std::sync::Arc;
 use std::mem;
 
-use counter::Counter;
 use types::{Callback2, callback2_exec};
 
 pub struct Result2<A,B>
@@ -9,7 +7,6 @@ pub struct Result2<A,B>
         A : Send + Sync + 'static,
         B : Send + Sync + 'static {
     
-    pub _counter : Arc<Counter>,                        //ta zmienne jest tylko do przetrzymywania referencji
     pub complete : Callback2<Option<A>, Option<B>>,
     pub result1  : Option<A>,
     pub result2  : Option<B>,

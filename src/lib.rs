@@ -27,7 +27,9 @@ mod tests {
 //TODO - zaimplementować drop dla taska, ma wykonać wtedy callbacka z wartością none ...
         //też trzeba sprawdzić czy działa wysyłanie None
  
-    
+//TODO - sprawdzić clippy
+        //dodać dev zależność
+
 /*
 pub fn get<F>(id: i32, job: F) where F: Fn(i32) + Send + 'static + Sync {
 
