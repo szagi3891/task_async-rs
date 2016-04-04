@@ -1,10 +1,9 @@
 use counter::Counter;
-use std::boxed::FnBox;
 use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-use types::{Callback1, Callback3};
+use types::{Callback1, callback1_exec, Callback3, callback3_exec};
 
 
 pub struct Task<A>
@@ -12,6 +11,7 @@ pub struct Task<A>
     
     counter : Arc<Counter>,
     func    : Callback1<Option<A>>,
+    is_exec : bool,
 }
 
 
@@ -21,10 +21,13 @@ impl<A> Drop for Task<A>
 
     fn drop(&mut self) {
         
-        let empty_clouser = Box::new(|_:Option<A>|{});
-        let complete      = mem::replace(&mut self.func, empty_clouser);
-        
-        (complete as Box<FnBox(Option<A>)>)(None);
+        if self.is_exec == false {
+
+            let empty_clouser = Box::new(|_:Option<A>|{});
+            let complete      = mem::replace(&mut self.func, empty_clouser);
+
+            callback1_exec(complete, None);
+        }
     }
 }
 
@@ -35,7 +38,8 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         Task {
             counter : counter,
-            func    : func
+            func    : func,
+            is_exec : false,
         }
     }
     
@@ -44,7 +48,9 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         let empty_clouser = Box::new(|_:Option<A>|{});
         let complete      = mem::replace(&mut self.func, empty_clouser);
         
-        (complete as Box<FnBox(Option<A>)>)(Some(value));
+        self.is_exec = true;
+        
+        callback1_exec(complete, Some(value));
     }
     
     
@@ -63,7 +69,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
             
-            (complete as Box<FnBox(Task<A>, Option<B>, Option<C>)>)(self, result1, result2);
+            callback3_exec(complete, self, result1, result2);
         });
         
         

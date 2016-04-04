@@ -1,8 +1,7 @@
 use std::sync::Arc;
-use std::boxed::FnBox;
 
 use counter::Counter;
-use types::Callback1;
+use types::{Callback0, Callback1};
 use task::Task;
 
 pub struct TaskManager {
@@ -11,7 +10,7 @@ pub struct TaskManager {
 
 impl TaskManager {
     
-    pub fn new(func: Box<FnBox() + Send + Sync + 'static>) -> TaskManager {
+    pub fn new(func: Callback0) -> TaskManager {
         
         TaskManager {
             counter : Counter::new(func)

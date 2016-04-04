@@ -1,9 +1,8 @@
 use std::sync::Arc;
 use std::mem;
-use std::boxed::FnBox;
 
 use counter::Counter;
-use types::Callback2;
+use types::{Callback2, callback2_exec};
 
 pub struct Result2<A,B>
     where
@@ -29,6 +28,6 @@ impl<A,B> Drop for Result2<A,B>
         let result1       = mem::replace(&mut self.result1, None);
         let result2       = mem::replace(&mut self.result2, None);
         
-        (complete as Box<FnBox(Option<A>,Option<B>)>)(result1, result2);
+        callback2_exec(complete, result1, result2);
     }
 }
