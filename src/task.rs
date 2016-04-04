@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-use types::{Callback1, callback1_exec, Callback3, callback3_exec};
+use types::{Callback1, callback1_exec, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
 
 
 
@@ -94,5 +94,79 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         (Task::new(counter1, func1), Task::new(counter2, func2))
     }
+    
+    
+    pub fn async3<B, C, D>(self, complete: Callback4<Task<A>, Option<B>, Option<C>, Option<D>>) -> (Task<B>, Task<C>, Task<D>)
+    
+    where
+        B : Send + Sync + 'static ,
+        C : Send + Sync + 'static ,
+        D : Send + Sync + 'static {
+         
+        
+        let (set1, set2) = self.async(Box::new(move|task: Task<A>, response1: Option<(Option<B>, Option<C>)>, response2: Option<D>|{
+            
+            let (res1, res2) = opt_to_tuple(response1);
+            
+            callback4_exec(complete, task, res1, res2, response2);
+        }));
+        
+        let (set11, set12) = set1.async(Box::new(move|task: Task<(Option<B>, Option<C>)>, response1: Option<B>, response2:Option<C>|{
+            
+            task.result((response1, response2));
+            
+        }));
+        
+        (set11, set12, set2)
+    }
+    
+    
+    
+    pub fn async4<B, C, D, E>(self, complete: Callback5<Task<A>, Option<B>, Option<C>, Option<D>, Option<E>>) -> (Task<B>, Task<C>, Task<D>, Task<E>)
+    
+    where
+        B : Send + Sync + 'static ,
+        C : Send + Sync + 'static ,
+        D : Send + Sync + 'static ,
+        E : Send + Sync + 'static {
+         
+        
+        let (set1, set2) = self.async(Box::new(move|task: Task<A>, response1: Option<(Option<B>, Option<C>)>, response2: Option<(Option<D>, Option<E>)>|{
+            
+            let (res1, res2) = opt_to_tuple(response1);
+            let (res3, res4) = opt_to_tuple(response2);
+            
+            callback5_exec(complete, task, res1, res2, res3, res4);
+        }));
+        
+        let (set11, set12) = set1.async(Box::new(move|task: Task<(Option<B>, Option<C>)>, response1: Option<B>, response2:Option<C>|{
+            
+            task.result((response1, response2));
+            
+        }));
+        
+        let (set21, set22) = set2.async(Box::new(move|task: Task<(Option<D>, Option<E>)>, response1: Option<D>, response2:Option<E>|{
+            
+            task.result((response1, response2));
+        }));
+        
+        
+        (set11, set12, set21, set22)
+    }
 }
 
+
+    
+//opcję z dwójki zamieniać na dwójkę opcji ....
+
+fn opt_to_tuple<A,B>(opt: Option<(Option<A>,Option<B>)>) -> (Option<A>, Option<B>)
+where
+    A : Send + Sync + 'static ,
+    B : Send + Sync + 'static {
+
+    match opt {
+        Some((a,b)) => (a,b),
+        None => (None, None),
+    }
+}
+    
