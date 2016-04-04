@@ -9,9 +9,9 @@ use channels_async::channel;
 use task_async::{TaskManager, Task};
 
 
-fn process_task(main_task: Task<String>) {
+fn process_task(task: Task<String>) {
     
-    let (set_resp1, set_resp2) = main_task.async(Box::new(move|main_task: Task<String>, response1: Option<String>, response2: Option<String>|{
+    let (set_resp1, set_resp2) = task.async(Box::new(move|task: Task<String>, response1: Option<String>, response2: Option<String>|{
 
                                         //zagregowanie obu odpowiedzi
         match (response1, response2) {
@@ -19,8 +19,8 @@ fn process_task(main_task: Task<String>) {
             (Some(dat1), Some(dat2)) => {
 
                 let mess: String = format!("zbiorczy callback '{}', '{}'", dat1, dat2);
-
-                main_task.result(mess);
+                
+                task.result(mess);
             },
 
             _ => {}

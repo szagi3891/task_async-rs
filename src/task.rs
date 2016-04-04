@@ -3,41 +3,8 @@ use std::boxed::FnBox;
 use std::sync::{Arc, RwLock};
 use std::mem;
 
-
-pub type Callback0        = Box<FnBox()      + Send + Sync + 'static>;
-pub type Callback1<A>     = Box<FnBox(A)     + Send + Sync + 'static>;
-pub type Callback2<A,B>   = Box<FnBox(A,B)   + Send + Sync + 'static>;
-pub type Callback3<A,B,C> = Box<FnBox(A,B,C) + Send + Sync + 'static>;
-
-
-struct Result2<A,B>
-    where
-        A : Send + Sync + 'static,
-        B : Send + Sync + 'static {
-    
-    _counter : Arc<Counter>,                        //ta zmienne jest tylko do przetrzymywania referencji
-    complete : Callback2<Option<A>, Option<B>>,
-    result1  : Option<A>,
-    result2  : Option<B>,
-}
-
-
-impl<A,B> Drop for Result2<A,B>
-    where
-        A : Send + Sync + 'static,
-        B : Send + Sync + 'static {
-
-    fn drop(&mut self) {
-
-        let empty_clouser = Box::new(|_:Option<A>, _:Option<B>|{});
-        let complete      = mem::replace(&mut self.complete, empty_clouser);
-        let result1       = mem::replace(&mut self.result1, None);
-        let result2       = mem::replace(&mut self.result2, None);
-        
-        (complete as Box<FnBox(Option<A>,Option<B>)>)(result1, result2);
-    }
-}
-
+use result2::Result2;
+use types::{Callback1, Callback3};
 
 
 pub struct Task<A>
@@ -47,21 +14,24 @@ pub struct Task<A>
     func    : Callback1<Option<A>>,
 }
 
-/*
-impl<A,B> Drop for Result2<A,B>
+
+impl<A> Drop for Task<A>
     where
-        A : Send + Sync + 'static,
-        B : Send + Sync + 'static {
+        A : Send + Sync + 'static {
 
     fn drop(&mut self) {
         
+        let empty_clouser = Box::new(|_:Option<A>|{});
+        let complete      = mem::replace(&mut self.func, empty_clouser);
+        
+        (complete as Box<FnBox(Option<A>)>)(None);
     }
 }
-*/
+
 
 impl<A> Task<A> where A : Send + Sync + 'static {
     
-    fn new(counter: Arc<Counter>, func: Callback1<Option<A>>) -> Task<A> {
+    pub fn new(counter: Arc<Counter>, func: Callback1<Option<A>>) -> Task<A> {
         
         Task {
             counter : counter,
@@ -121,25 +91,3 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     }
 }
 
-
-
-pub struct TaskManager {
-    counter : Arc<Counter>,
-}
-
-impl TaskManager {
-    
-    pub fn new(func: Box<FnBox() + Send + Sync + 'static>) -> TaskManager {
-        
-        TaskManager {
-            counter : Counter::new(func)
-        }
-    }
-    
-    
-    pub fn task<A>(&self, func: Callback1<Option<A>>) -> Task<A>
-        where A : Send + Sync + 'static {
-        
-        Task::new(self.counter.clone(), func)
-    }   
-}

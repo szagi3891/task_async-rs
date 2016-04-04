@@ -5,10 +5,14 @@ extern crate channels_async;
 
 mod counter;
 mod task;
+mod result2;
+mod types;
+mod taskmanager;
+
 
 pub use counter::Counter;
-pub use task::{TaskManager, Task, Callback1, Callback2};
-
+pub use task::Task;
+pub use taskmanager::TaskManager;
 
 
 
