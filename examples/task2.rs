@@ -78,7 +78,7 @@ fn process_task(task: Task<String>) {
 
 fn main() {
     
-    println!("Task start");
+    println!("Task start (2)");
     
     let (down_producer, donw_consumer) = channel();
     

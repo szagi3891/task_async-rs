@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-use types::{Callback1, callback1_exec, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
+use types::{Callback1, callback1_exec, Callback2, callback2_exec, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
 
 
 
@@ -53,6 +53,23 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             None => unreachable!(),
         }
     }
+    
+    
+    pub fn run<B>(self, complete: Callback2<Task<A>, Option<B>>) -> Task<B>
+    
+    where
+        B : Send + Sync + 'static {
+        
+        let counter = self.counter.clone();
+        
+        let func = Box::new(move |result: Option<B>| {
+            
+            callback2_exec(complete, self, result);
+        });
+        
+        Task::new(counter, func)
+    }
+    
     
     
     pub fn async<B, C>(self, complete: Callback3<Task<A>, Option<B>, Option<C>>) -> (Task<B>, Task<C>)
