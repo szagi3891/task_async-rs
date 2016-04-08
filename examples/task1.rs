@@ -11,7 +11,7 @@ use task_async::{TaskManager, Task};
 
 fn process_task(task: Task<String>) {
     
-    let set_resp = task.run(Box::new(move|task: Task<String>, response: Option<String>|{
+    let set_resp = task.async1(Box::new(move|task: Task<String>, response: Option<String>|{
 
                                         //zagregowanie obu odpowiedzi
         match response {
