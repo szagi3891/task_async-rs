@@ -1,7 +1,3 @@
-use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
-
 extern crate task_async;
 extern crate channels_async;
 
@@ -29,9 +25,9 @@ fn process_task(task: Task<String>) {
     }));
     
                         //asynchroniczne zapytanie
-    thread::spawn(move||{
+    task_async::spawn("async_query".to_owned(), move||{
 
-        sleep(Duration::from_millis(2000));
+        task_async::sleep(2000);
         println!("wykonało się asynchroniczne zapytanie");
         
         set_resp.result("odpowiedź tegoż zapytania".to_owned());

@@ -1,7 +1,7 @@
 [package]
 name = "task_async"
 version = "0.1.0"
-authors = ["szagi3891 <szeligagrzegorz@gmail.com>"]
+authors = ["szagi3891 <szeligagrzegorz@gmail.com>", "sfisol" <sfisol@gmail.com>]
 
 
 [dependencies.channels_async]

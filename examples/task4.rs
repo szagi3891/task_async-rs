@@ -1,7 +1,3 @@
-use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
-
 extern crate task_async;
 extern crate channels_async;
 
@@ -25,33 +21,33 @@ fn process_task(task: Task<String>) {
         }
     }));
         
-    thread::spawn(move||{
+    task_async::spawn("task1".to_owned(), move||{
 
-        sleep(Duration::from_millis(3000));
+        task_async::sleep(3000);
         println!("task1");
 
         set_resp1.result("resp1".to_owned());
     });
 
-    thread::spawn(move||{
+    task_async::spawn("task2".to_owned(), move||{
 
-        sleep(Duration::from_millis(2000));
+        task_async::sleep(2000);
         println!("task2");
 
         set_resp2.result("resp2".to_owned());
     });
 
-    thread::spawn(move||{
+    task_async::spawn("task3".to_owned(), move||{
 
-        sleep(Duration::from_millis(1000));
+        task_async::sleep(1000);
         println!("task3");
 
         set_resp3.result("resp3".to_owned());
     });
 
-    thread::spawn(move||{
+    task_async::spawn("task4".to_owned(), move||{
 
-        sleep(Duration::from_millis(4000));
+        task_async::sleep(4000);
         println!("task4");
 
         set_resp4.result("resp4".to_owned());

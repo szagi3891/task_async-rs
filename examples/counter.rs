@@ -1,6 +1,3 @@
-use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
 use std::sync::Arc;
 
 extern crate task_async;
@@ -12,11 +9,11 @@ use task_async::Counter;
 
 fn run_timeout(inst: Arc<Counter>, name: String, timeout: u64) {
 
-    thread::spawn(move||{
+    task_async::spawn(name.clone(), move||{
         
         let _ = inst.clone();
         
-        sleep(Duration::from_millis(timeout));
+        task_async::sleep(timeout);
         
         println!("end task -> {}", name);
     });

@@ -1,7 +1,3 @@
-use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
-
 extern crate task_async;
 extern crate channels_async;
 
@@ -29,9 +25,9 @@ fn process_task(task: Task<String>) {
     }));
 
                         //asynchroniczne zapytanie
-    thread::spawn(move||{
+    task_async::spawn("async_query".to_owned(), move||{
 
-        sleep(Duration::from_millis(2000));
+        task_async::sleep(2000);
         println!("wykonało się pierwsze asynchroniczne zapytanie");
 
         set_resp1.result("odpowiedź pierwsza".to_owned());
@@ -55,9 +51,9 @@ fn process_task(task: Task<String>) {
 
 
                         //asynchroniczne zapytanie
-    thread::spawn(move||{
+    task_async::spawn("async3".to_owned(), move||{
 
-        sleep(Duration::from_millis(3000));
+        task_async::sleep(3000);
         println!("wykonało się trzecie asynchroniczne zapytanie");
 
         set_resp3.result("odpowiedź trzecia".to_owned());
@@ -65,10 +61,10 @@ fn process_task(task: Task<String>) {
 
 
                         //asynchroniczne zapytanie
-    thread::spawn(move||{
+    task_async::spawn("async4".to_owned(), move||{
 
 
-        sleep(Duration::from_millis(4000));
+        task_async::sleep(4000);
         println!("wykonało się czwarte asynchroniczne zapytanie");
 
         set_resp4.result("odpowiedź czwarta".to_owned());
