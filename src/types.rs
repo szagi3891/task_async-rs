@@ -7,16 +7,71 @@ pub type Callback3<A,B,C>     = Box<FnBox(A,B,C)     + Send + Sync + 'static>;
 pub type Callback4<A,B,C,D>   = Box<FnBox(A,B,C,D)   + Send + Sync + 'static>;
 pub type Callback5<A,B,C,D,E> = Box<FnBox(A,B,C,D,E) + Send + Sync + 'static>;
 
-pub fn callback0_exec(func: Callback0) {
-    
-    (func as Box<FnBox()>)();
+pub struct CallbackBox0 {
+    func : Callback0
 }
 
-pub fn callback1_exec<A>(func: Callback1<A>, arg1: A) 
-    where
-        A : Send + Sync + 'static {
+impl CallbackBox0 {
     
-    (func as Box<FnBox(A)>)(arg1);
+	pub fn new(func: Callback0) -> CallbackBox0 {
+		CallbackBox0 {
+			func : func,
+		}
+	}
+    
+    pub fn exec(self) {
+
+        ((self.func) as Box<FnBox()>)();
+    }
+}
+
+pub struct CallbackBox1<A>
+	where
+		A : Send + Sync + 'static {
+	
+    func : Callback1<A>
+}
+
+impl<A> CallbackBox1<A>
+	where
+		A : Send + Sync + 'static {
+
+	pub fn new(func: Callback1<A>) -> CallbackBox1<A> {
+		CallbackBox1 {
+			func : func,
+		}
+	}
+	
+	pub fn exec(self, arg1: A) {
+		
+		(self.func as Box<FnBox(A)>)(arg1);
+	}
+}
+
+
+pub struct CallbackBox2<A>
+	where
+		A : Send + Sync + 'static ,
+		B : Send + Sync + 'static {
+	
+    func : Callback2<A,B>
+}
+
+impl<A,B> CallbackBox2<A,B>
+	where
+		A : Send + Sync + 'static ,
+		B : Send + Sync + 'static {
+
+	pub fn new(func: Callback2<A,B>) -> CallbackBox2<A,B> {
+		CallbackBox2 {
+			func : func,
+		}
+	}
+	
+	pub fn exec(self, arg1: A, arg2: A) {
+		
+		(self.func as Box<FnBox(A,B)>)(arg1, arg2);
+	}
 }
 
 pub fn callback2_exec<A,B>(func: Callback2<A,B>, arg1: A, arg2: B) 

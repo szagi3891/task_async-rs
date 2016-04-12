@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-use types::{Callback1, callback1_exec, Callback2, callback2_exec, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
+use types::{Callback1, CallbackBox1, Callback2, CallbackBox2, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
 
 
 
@@ -12,7 +12,7 @@ pub struct Task<A>
     where A : Send + Sync + 'static {
     
     counter : Arc<Counter>,
-    func    : Option<Callback1<Option<A>>>,
+    func    : Option<CallbackBox1<Option<A>>>,
 }
 
 
@@ -24,7 +24,7 @@ impl<A> Drop for Task<A>
         
         match mem::replace(&mut self.func, None) {
 
-            Some(complete) => callback1_exec(complete, None),
+            Some(complete) => complete.exec(None),
 
             None => {
                 //nic nie robimy, prawidłowy przebieg
@@ -40,7 +40,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         Task {
             counter : counter,
-            func    : Some(func),
+            func    : Some(CallbackBox1::new(func)),
         }
     }
     
@@ -49,7 +49,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         match mem::replace(&mut self.func, None) {
             
-            Some(complete) => callback1_exec(complete, Some(value)),
+            Some(complete) => complete.exec(Some(value)),
             None => unreachable!(),
         }
     }
