@@ -3,7 +3,12 @@ use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-use types::{Callback1, callback1_exec, Callback2, callback2_exec, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
+
+use callback1;
+use callback2;
+use callback3;
+use callback4;
+use callback5;
 
 
 
@@ -12,7 +17,7 @@ pub struct Task<A>
     where A : Send + Sync + 'static {
     
     counter : Arc<Counter>,
-    func    : Option<Callback1<Option<A>>>,
+    func    : Option<callback1::CallbackBox<Option<A>>>,
 }
 
 
@@ -24,7 +29,7 @@ impl<A> Drop for Task<A>
         
         match mem::replace(&mut self.func, None) {
 
-            Some(complete) => callback1_exec(complete, None),
+            Some(complete) => complete.exec(None),
 
             None => {
                 //nic nie robimy, prawidłowy przebieg
@@ -36,11 +41,11 @@ impl<A> Drop for Task<A>
 
 impl<A> Task<A> where A : Send + Sync + 'static {
     
-    pub fn new(counter: Arc<Counter>, func: Callback1<Option<A>>) -> Task<A> {
+    pub fn new(counter: Arc<Counter>, func: callback1::Callback<Option<A>>) -> Task<A> {
         
         Task {
             counter : counter,
-            func    : Some(func),
+            func    : Some(callback1::new(func)),
         }
     }
     
@@ -49,13 +54,13 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         match mem::replace(&mut self.func, None) {
             
-            Some(complete) => callback1_exec(complete, Some(value)),
+            Some(complete) => complete.exec(Some(value)),
             None => unreachable!(),
         }
     }
     
     
-    pub fn async1<B>(self, complete: Callback2<Task<A>, Option<B>>) -> Task<B>
+    pub fn async1<B>(self, complete: callback2::Callback<Task<A>, Option<B>>) -> Task<B>
     
     where
         B : Send + Sync + 'static {
@@ -63,8 +68,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         let counter = self.counter.clone();
         
         let func = Box::new(move |result: Option<B>| {
-            
-            callback2_exec(complete, self, result);
+            callback2::exec(complete, self, result);
         });
         
         Task::new(counter, func)
@@ -72,7 +76,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     
     
     
-    pub fn async2<B, C>(self, complete: Callback3<Task<A>, Option<B>, Option<C>>) -> (Task<B>, Task<C>)
+    pub fn async2<B, C>(self, complete: callback3::Callback<Task<A>, Option<B>, Option<C>>) -> (Task<B>, Task<C>)
     
     where
         B : Send + Sync + 'static ,
@@ -86,7 +90,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
             
-            callback3_exec(complete, self, result1, result2);
+            callback3::exec(complete, self, result1, result2);
         });
         
         
@@ -113,7 +117,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     }
     
     
-    pub fn async3<B, C, D>(self, complete: Callback4<Task<A>, Option<B>, Option<C>, Option<D>>) -> (Task<B>, Task<C>, Task<D>)
+    pub fn async3<B, C, D>(self, complete: callback4::Callback<Task<A>, Option<B>, Option<C>, Option<D>>) -> (Task<B>, Task<C>, Task<D>)
     
     where
         B : Send + Sync + 'static ,
@@ -125,7 +129,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             
             let (res1, res2) = opt_to_tuple(response1);
             
-            callback4_exec(complete, task, res1, res2, response2);
+            callback4::exec(complete, task, res1, res2, response2);
         }));
         
         let (set11, set12) = set1.async2(Box::new(move|task: Task<(Option<B>, Option<C>)>, response1: Option<B>, response2:Option<C>|{
@@ -139,7 +143,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     
     
     
-    pub fn async4<B, C, D, E>(self, complete: Callback5<Task<A>, Option<B>, Option<C>, Option<D>, Option<E>>) -> (Task<B>, Task<C>, Task<D>, Task<E>)
+    pub fn async4<B, C, D, E>(self, complete: callback5::Callback<Task<A>, Option<B>, Option<C>, Option<D>, Option<E>>) -> (Task<B>, Task<C>, Task<D>, Task<E>)
     
     where
         B : Send + Sync + 'static ,
@@ -153,7 +157,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             let (res1, res2) = opt_to_tuple(response1);
             let (res3, res4) = opt_to_tuple(response2);
             
-            callback5_exec(complete, task, res1, res2, res3, res4);
+            callback5::exec(complete, task, res1, res2, res3, res4);
         }));
         
         let (set11, set12) = set1.async2(Box::new(move|task: Task<(Option<B>, Option<C>)>, response1: Option<B>, response2:Option<C>|{

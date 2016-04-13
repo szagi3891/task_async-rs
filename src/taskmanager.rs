@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use counter::Counter;
-use types::{Callback0, Callback1};
 use task::Task;
+use callback0;
+use callback1;
 
 pub struct TaskManager {
     counter : Arc<Counter>,
@@ -10,7 +11,7 @@ pub struct TaskManager {
 
 impl TaskManager {
     
-    pub fn new(func: Callback0) -> TaskManager {
+    pub fn new(func: callback0::Callback) -> TaskManager {
         
         TaskManager {
             counter : Counter::new(func)
@@ -18,7 +19,7 @@ impl TaskManager {
     }
     
     
-    pub fn task<A>(&self, func: Callback1<Option<A>>) -> Task<A>
+    pub fn task<A>(&self, func: callback1::Callback<Option<A>>) -> Task<A>
         where A : Send + Sync + 'static {
         
         Task::new(self.counter.clone(), func)

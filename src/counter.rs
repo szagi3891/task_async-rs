@@ -1,18 +1,18 @@
 use std::sync::Arc;
 use std::mem;
 
-use types::{Callback0, callback0_exec};
+use callback0;
 
 pub struct Counter {
-    func : Callback0,
+    func : callback0::CallbackBox,
 }
 
 impl Counter {
 
-    pub fn new(func: Callback0) -> Arc<Counter> {
+    pub fn new(func: callback0::Callback) -> Arc<Counter> {
 
         Arc::new(Counter {
-            func : func
+            func : callback0::new(func)
         })
     }
 }
@@ -21,10 +21,10 @@ impl Drop for Counter {
     
     fn drop(&mut self) {
         
-        let empty_clouser = Box::new(||{});
+        let empty_clouser = callback0::new(Box::new(||{}));
         let func = mem::replace(&mut self.func, empty_clouser);
         
-        callback0_exec(func);
+		func.exec();
     }
 }
 
