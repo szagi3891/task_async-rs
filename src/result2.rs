@@ -1,6 +1,6 @@
 use std::mem;
 
-use types::{Callback2, callback2_exec};
+use types::{Callback2, CallbackBox2};
 
 pub struct Result2<A,B>
     where
@@ -25,6 +25,6 @@ impl<A,B> Drop for Result2<A,B>
         let result1       = mem::replace(&mut self.result1, None);
         let result2       = mem::replace(&mut self.result2, None);
         
-        callback2_exec(complete, result1, result2);
+        CallbackBox2::exec_func(complete, result1, result2);
     }
 }

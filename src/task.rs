@@ -3,7 +3,13 @@ use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-use types::{Callback1, CallbackBox1, Callback2, CallbackBox2, Callback3, callback3_exec, Callback4, callback4_exec, Callback5, callback5_exec};
+use types::{
+    Callback1, CallbackBox1,
+    Callback2, CallbackBox2,
+    Callback3, CallbackBox3,
+    Callback4, CallbackBox4,
+    Callback5, CallbackBox5
+};
 
 
 
@@ -63,8 +69,8 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         let counter = self.counter.clone();
         
         let func = Box::new(move |result: Option<B>| {
-            
-            callback2_exec(complete, self, result);
+            CallbackBox2::exec_func(complete, self, result);
+            //callback2_exec(complete, self, result);
         });
         
         Task::new(counter, func)
@@ -86,7 +92,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
             
-            callback3_exec(complete, self, result1, result2);
+            CallbackBox3::exec_func(complete, self, result1, result2);
         });
         
         
@@ -125,7 +131,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             
             let (res1, res2) = opt_to_tuple(response1);
             
-            callback4_exec(complete, task, res1, res2, response2);
+            CallbackBox4::exec_func(complete, task, res1, res2, response2);
         }));
         
         let (set11, set12) = set1.async2(Box::new(move|task: Task<(Option<B>, Option<C>)>, response1: Option<B>, response2:Option<C>|{
@@ -153,7 +159,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             let (res1, res2) = opt_to_tuple(response1);
             let (res3, res4) = opt_to_tuple(response2);
             
-            callback5_exec(complete, task, res1, res2, res3, res4);
+            CallbackBox5::exec_func(complete, task, res1, res2, res3, res4);
         }));
         
         let (set11, set12) = set1.async2(Box::new(move|task: Task<(Option<B>, Option<C>)>, response1: Option<B>, response2:Option<C>|{
