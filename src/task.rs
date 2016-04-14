@@ -16,8 +16,7 @@ use callback5;
 pub struct Task<A>
     where A : Send + Sync + 'static {
     
-    counter : Arc<Counter>,
-    func    : Option<callback1::CallbackBox<Option<A>>>,
+    func : Option<callback1::CallbackBox<Option<A>>>,
 }
 
 
@@ -41,16 +40,14 @@ impl<A> Drop for Task<A>
 
 impl<A> Task<A> where A : Send + Sync + 'static {
     
-    pub fn new(counter: Arc<Counter>, func: callback1::Callback<Option<A>>) -> Task<A> {
+    pub fn new(func: callback1::Callback<Option<A>>) -> Task<A> {
         
         Task {
-            counter : counter,
-            func    : Some(callback1::new(func)),
+            func : Some(callback1::new(func)),
         }
     }
     
     pub fn result(mut self, value: A) {
-        
         
         match mem::replace(&mut self.func, None) {
             
@@ -65,13 +62,11 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     where
         B : Send + Sync + 'static {
         
-        let counter = self.counter.clone();
-        
         let func = Box::new(move |result: Option<B>| {
             callback2::exec(complete, self, result);
         });
         
-        Task::new(counter, func)
+        Task::new(func)
     }
     
     
@@ -81,10 +76,6 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     where
         B : Send + Sync + 'static ,
         C : Send + Sync + 'static {
-        
-        
-        let counter1 = self.counter.clone();
-        let counter2 = self.counter.clone();
         
                                                         //TODO - upewnić się że licznik zbiorczego zadania prawidłowo się przenosi
         
@@ -113,7 +104,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             result.write().unwrap().result2 = data;
         });
         
-        (Task::new(counter1, func1), Task::new(counter2, func2))
+        (Task::new(func1), Task::new(func2))
     }
     
     

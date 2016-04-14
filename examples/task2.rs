@@ -2,7 +2,7 @@ extern crate task_async;
 extern crate channels_async;
 
 use channels_async::channel;
-use task_async::{TaskManager, Task};
+use task_async::Task;
 
 
 fn process_task(task: Task<String>) {
@@ -78,31 +78,23 @@ fn main() {
     
     let (down_producer, donw_consumer) = channel();
     
-    {
-        
-        let varible = "some value".to_owned();
-        
-        
-        let task_manager = TaskManager::new(Box::new(move||{
+    
+    
+    let varible = "some value".to_owned();
 
-            println!("runung task is 0 -> {}", varible);
-            down_producer.send(()).unwrap();
-        }));
-        
-        
-        
-        let task = task_manager.task(Box::new(move|result : Option<String>|{
-            
-            match result {
-                Some(value) => println!("{}", value),
-                None => println!("dane niekompletne"),
-            };
-        }));
-        
-        process_task(task);
-        
-        
-    }
+
+    let task = Task::new(Box::new(move|result : Option<String>|{
+
+        match result {
+            Some(value) => println!("complete: {} -> {}", value, varible),
+            None => println!("dane niekompletne"),
+        };
+
+        down_producer.send(()).unwrap();
+    }));
+
+    process_task(task);
+    
     
     
     let _ = donw_consumer.get();
