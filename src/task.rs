@@ -1,4 +1,3 @@
-use counter::Counter;
 use std::sync::{Arc, RwLock};
 use std::mem;
 
