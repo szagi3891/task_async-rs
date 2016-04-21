@@ -7,21 +7,19 @@ mod counter;
 mod task;
 mod result2;
 mod utils;
-mod callback;
 
-
+pub mod callback0;
+pub mod callback1;
+pub mod callback2;
+pub mod callback3;
+pub mod callback4;
+pub mod callback5;
 
 pub use counter::Counter;
 pub use task::Task;
 
 pub use utils::*;
 
-pub use callback::callback0;
-pub use callback::callback1;
-pub use callback::callback2;
-pub use callback::callback3;
-pub use callback::callback4;
-pub use callback::callback5;
 
 
 //TODO - sprawdzić clippy

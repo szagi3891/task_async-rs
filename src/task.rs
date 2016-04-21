@@ -3,11 +3,11 @@ use std::mem;
 
 use result2::Result2;
 
-use callback::callback1;
-use callback::callback2;
-use callback::callback3;
-use callback::callback4;
-use callback::callback5;
+use callback1;
+use callback2;
+use callback3;
+use callback4;
+use callback5;
 
 
 

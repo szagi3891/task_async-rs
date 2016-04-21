@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::mem;
 
-use callback::callback0;
+use callback0;
 
 pub struct Counter {
     func : callback0::CallbackBox,

@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
-use callback::callback0;
+use callback0;
 use std::mem;
 
 
