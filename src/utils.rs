@@ -1,6 +1,8 @@
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
+use callback::callback0;
+use std::mem;
 
 
 pub fn log_error(message: String) {
@@ -38,6 +40,52 @@ pub fn spawn<F, T>(name: String, block: F)
         Err(err) => panic!("Can't spawn {}: {}", name, err),
     };
 }
+
+
+
+pub fn spawn_defer<F, T, D>(name: String, block: F, defer: D)
+    where
+        F: FnOnce() -> T + Send + Sync + 'static,
+        T: Send + Sync + 'static,
+        D: FnOnce() + Send + Sync + 'static {
+
+    spawn(name, move||{
+        
+        let _defer = Defer::new(callback0::new(Box::new(defer)));
+        
+        block()
+    });
+}
+
+
+
+
+//http://stackoverflow.com/questions/29963449/golang-like-defer-in-rust
+
+struct Defer {
+    func: callback0::CallbackBox
+}
+
+impl Drop for Defer {
+    
+    fn drop(&mut self) {
+        
+        let empty_clouser = callback0::new(Box::new(||{}));
+        let func = mem::replace(&mut self.func, empty_clouser);
+        
+		func.exec();
+    }
+}
+
+impl Defer {
+    
+    fn new(func : callback0::CallbackBox) -> Defer {
+        Defer {
+            func : func
+        }
+    }
+}
+
 
 
 pub fn sleep(time: u64) {

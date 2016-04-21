@@ -1,6 +1,6 @@
 use std::mem;
 
-use callback2;
+use callback::callback2;
 
 pub struct Result2<A,B>
     where
