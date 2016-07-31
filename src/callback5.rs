@@ -12,7 +12,7 @@ pub fn exec<A,B,C,D,E>(func: Callback<A,B,C,D,E>, arg1: A, arg2: B, arg3: C, arg
     
     (func as Box<FnBox(A,B,C,D,E)>)(arg1, arg2, arg3, arg4, arg5);
 }
-
+/*
 pub struct CallbackBox<A,B,C,D,E>
 	where
 		A : Send + Sync + 'static ,
@@ -49,3 +49,4 @@ pub fn new<A,B,C,D,E>(func: Callback<A,B,C,D,E>) -> CallbackBox<A,B,C,D,E>
         func : func,
     }
 }
+*/

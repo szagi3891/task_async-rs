@@ -1,19 +1,16 @@
 #![feature(fnbox)]
 
-
-extern crate channels_async;
-
 mod counter;
 mod task;
 mod result2;
 mod utils;
 
-pub mod callback0;
-pub mod callback1;
-pub mod callback2;
-pub mod callback3;
-pub mod callback4;
-pub mod callback5;
+mod callback0;
+mod callback1;
+mod callback2;
+mod callback3;
+mod callback4;
+mod callback5;
 
 pub use counter::Counter;
 pub use task::Task;
