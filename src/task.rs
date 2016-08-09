@@ -9,13 +9,13 @@ use callback3;
 use callback4;
 use callback5;
 
-
-
+use task_pool::TaskPool;
 
 pub struct Task<A>
     where A : Send + Sync + 'static {
     
     func : Option<callback1::CallbackBox<Option<A>>>,
+    task_pool: TaskPool
 }
 
 
@@ -37,15 +37,18 @@ impl<A> Drop for Task<A>
 }
 
 
-impl<A> Task<A> where A : Send + Sync + 'static {
-    
-    pub fn new(func: callback1::Callback<Option<A>>) -> Task<A> {
-        
-        Task {
-            func : Some(callback1::new(func)),
-        }
+pub fn new_task<A>(func: callback1::Callback<Option<A>>, task_pool: TaskPool) -> Task<A>
+    where A : Send + Sync + 'static {
+
+    Task {
+        func : Some(callback1::new(func)),
+        task_pool: task_pool
     }
-    
+}
+
+
+impl<A> Task<A> where A : Send + Sync + 'static {
+
     pub fn result(mut self, value: A) {
         
         match mem::replace(&mut self.func, None) {
@@ -61,11 +64,13 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     where
         B : Send + Sync + 'static {
         
+        let pool = self.task_pool.clone();
+
         let func = Box::new(move |result: Option<B>| {
             callback2::exec(complete, self, result);
         });
         
-        Task::new(func)
+        new_task(func, pool)
     }
     
     
@@ -76,6 +81,9 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         B : Send + Sync + 'static ,
         C : Send + Sync + 'static {
         
+            
+        let pool1 = self.task_pool.clone();
+        let pool2 = self.task_pool.clone();
                                                         //TODO - upewnić się że licznik zbiorczego zadania prawidłowo się przenosi
         
         let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
@@ -103,7 +111,7 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             result.write().unwrap().result2 = data;
         });
         
-        (Task::new(func1), Task::new(func2))
+        (new_task(func1, pool1), new_task(func2, pool2))
     }
     
     
