@@ -9,9 +9,22 @@ mod autoid;
 use thread_pool::types::{CounterType, WorkerBuilderType};
 use thread_pool::inner::{Inner};
 
-#[derive(Clone)]
 pub struct ThreadPool<Param: Send + Sync + 'static> {
     inner: Arc<Mutex<Inner<Param>>>,
+}
+
+impl<Param> Clone for ThreadPool<Param> where Param: Send + Sync + 'static {
+    
+    fn clone(&self) -> ThreadPool<Param> {
+        
+        ThreadPool {
+            inner : self.inner.clone(),
+        }
+    }
+
+    fn clone_from(&mut self, source: &ThreadPool<Param>) {
+        self.inner = source.inner.clone();
+    }
 }
 
 impl<Param> ThreadPool<Param> where Param: Send + Sync + 'static {

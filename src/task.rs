@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 use std::mem;
 
 use result2::Result2;
-
+use callback0;
 use callback1;
 use callback2;
 use callback3;
@@ -53,7 +53,14 @@ impl<A> Task<A> where A : Send + Sync + 'static {
         
         match mem::replace(&mut self.func, None) {
             
-            Some(complete) => complete.exec(Some(value)),
+            Some(complete) => {
+                
+                                            //TODO - przesyłać do puli callbacka z parametrami do wykonania
+
+                self.task_pool.run(callback0::new(Box::new(move||{
+                    complete.exec(Some(value));
+                })));
+            },
             None => unreachable!(),
         }
     }
@@ -64,13 +71,19 @@ impl<A> Task<A> where A : Send + Sync + 'static {
     where
         B : Send + Sync + 'static {
         
-        let pool = self.task_pool.clone();
-
+        let pool1 = self.task_pool.clone();
+        let pool2 = self.task_pool.clone();
+        
+                                        //TODO - przesyłać do puli callbacka z parametrami do wykonania
+            
         let func = Box::new(move |result: Option<B>| {
-            callback2::exec(complete, self, result);
+            pool1.run(callback0::new(Box::new(move||{
+                
+                callback2::exec(complete, self, result);
+            })));
         });
         
-        new_task(func, pool)
+        new_task(func, pool2)
     }
     
     
@@ -84,11 +97,16 @@ impl<A> Task<A> where A : Send + Sync + 'static {
             
         let pool1 = self.task_pool.clone();
         let pool2 = self.task_pool.clone();
-                                                        //TODO - upewnić się że licznik zbiorczego zadania prawidłowo się przenosi
+        let pool3 = self.task_pool.clone();
         
+                                                    //TODO - przesyłać do puli callbacka z parametrami do wykonania
+            
         let new_complete = Box::new(move|result1 : Option<B>, result2 : Option<C>|{
             
-            callback3::exec(complete, self, result1, result2);
+            pool3.run(callback0::new(Box::new(move||{
+            
+                callback3::exec(complete, self, result1, result2);
+            })));
         });
         
         
