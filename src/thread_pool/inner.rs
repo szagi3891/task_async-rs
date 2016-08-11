@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex, Weak};
 use std::sync::mpsc::{channel};
 use std::collections::HashMap;
 use std::thread;
@@ -28,7 +28,7 @@ impl<Param> Inner<Param> where Param: Send + Sync + 'static {
     }
 
     pub fn create_worker(&mut self,
-        inner: Arc<Mutex<Inner<Param>>>,
+        inner_week: Weak<Mutex<Inner<Param>>>,
         worker_function: WorkerFunctionType<Param>) {
 
         let (sender, receiver) = channel();
@@ -48,8 +48,15 @@ impl<Param> Inner<Param> where Param: Send + Sync + 'static {
 
                         (worker_function)(param);
 
-                        let mut guard = inner.lock().unwrap();
-                        guard.set_as_idle(receiver_id.id());
+                        match inner_week.upgrade() {
+                            Some(inner) => {    
+                                let mut guard = inner.lock().unwrap();
+                                guard.set_as_idle(receiver_id.id());
+                            },
+                            None => {
+                                return;
+                            }
+                        }
                     },
                     None => {
                         return;

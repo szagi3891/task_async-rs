@@ -13,20 +13,6 @@ pub struct ThreadPool<Param: Send + Sync + 'static> {
     inner: Arc<Mutex<Inner<Param>>>,
 }
 
-impl<Param> Clone for ThreadPool<Param> where Param: Send + Sync + 'static {
-    
-    fn clone(&self) -> ThreadPool<Param> {
-        
-        ThreadPool {
-            inner : self.inner.clone(),
-        }
-    }
-
-    fn clone_from(&mut self, source: &ThreadPool<Param>) {
-        self.inner = source.inner.clone();
-    }
-}
-
 impl<Param> ThreadPool<Param> where Param: Send + Sync + 'static {
         
     pub fn new(count: CounterType, worker_builder: WorkerBuilderType<Param>) -> ThreadPool<Param> {
@@ -44,17 +30,31 @@ impl<Param> ThreadPool<Param> where Param: Send + Sync + 'static {
 
     fn new_workers(&self, count: CounterType, worker_builder: WorkerBuilderType<Param>) {
 
-        let self_clone = self.clone();
+        let inner_weak = Arc::downgrade(&self.inner);
         let mut guard = self.inner.lock().unwrap();
         
         for _ in 0..count {
             let worker_function = (worker_builder)();
-            guard.create_worker(self_clone.inner.clone(), worker_function);
+            guard.create_worker(inner_weak.clone(), worker_function);
         }
     }
 
     pub fn run(&self, param: Param) {
         let mut guard = self.inner.lock().unwrap();
         guard.run(param);
+    }
+}
+
+impl<Param> Clone for ThreadPool<Param> where Param: Send + Sync + 'static {
+    
+    fn clone(&self) -> ThreadPool<Param> {
+        
+        ThreadPool {
+            inner : self.inner.clone(),
+        }
+    }
+
+    fn clone_from(&mut self, source: &ThreadPool<Param>) {
+        self.inner = source.inner.clone();
     }
 }
